@@ -8,16 +8,16 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import CustomFont from '../components/customFont';
-import axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import CustomFont from '../../components/customFont';
+import {useAuth} from '../auth/AuthContext';
 
 const IndexPage = ({navigation}: {navigation: any}) => {
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const {login} = useAuth();
 
   const handleSignup = () => {
-    navigation.navigate('Signup');
+    navigation.navigate('SignupPage');
   };
 
   const handleLogin = async () => {
@@ -26,23 +26,10 @@ const IndexPage = ({navigation}: {navigation: any}) => {
       return;
     }
     try {
-      const response = await axios.post(`http://10.0.2.2:3000/users/login`, {
-        email: email,
-        password: password,
-      });
-
-      console.log(response);
-
-      if (response.status === 201) {
-        await AsyncStorage.setItem('access_token', response.data.access_token);
-        await AsyncStorage.setItem(
-          'refresh_token',
-          response.data.refresh_token,
-        );
-        navigation.navigate('MainTabs');
-      }
+      await login(email, password);
     } catch (e) {
       console.error(e);
+      Alert.alert('로그인에 실패했습니다.');
     }
   };
 
@@ -50,7 +37,7 @@ const IndexPage = ({navigation}: {navigation: any}) => {
     <View style={styles.container}>
       <View style={styles.topView}>
         <Image
-          source={require('../images/logo.webp')}
+          source={require('../../images/logo.webp')}
           style={{width: '60%', marginBottom: 30}}
           resizeMode="contain"
         />

@@ -9,10 +9,11 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import CustomFont from '../components/customFont';
-import CustomInput from '../components/customInput';
-import RadioButton from '../components/radioButton';
+import CustomFont from '../../components/customFont';
+import CustomInput from '../../components/customInput';
+import RadioButton from '../../components/radioButton';
 import axios from 'axios';
+import {useAuth} from '../auth/AuthContext';
 
 const SignupPage = ({navigation}: {navigation: any}) => {
   const [email, setEmail] = React.useState('');
@@ -40,6 +41,8 @@ const SignupPage = ({navigation}: {navigation: any}) => {
     passwordCheck: false,
     birth: false,
   });
+
+  const {login} = useAuth();
 
   const handleDupEmail = async () => {
     if (email === '') {
@@ -98,7 +101,7 @@ const SignupPage = ({navigation}: {navigation: any}) => {
       return;
     }
     try {
-      const res = await axios.post('http://10.0.2.2:3000/users', {
+      const res = await axios.post('http://1.2.3.4:3000/users', {
         email: email,
         password: password,
         name: name,
@@ -110,7 +113,7 @@ const SignupPage = ({navigation}: {navigation: any}) => {
         {
           text: '확인',
           onPress: () => {
-            navigation.navigate('Index');
+            login(email, password);
           },
         },
       ]);
@@ -140,7 +143,7 @@ const SignupPage = ({navigation}: {navigation: any}) => {
         contentContainerStyle={styles.scrollContainer}>
         <View style={styles.logoView}>
           <Image
-            source={require('../images/logo.webp')}
+            source={require('../../images/logo.webp')}
             style={{width: 200}}
             resizeMode="contain"
           />
