@@ -22,7 +22,6 @@ export class AuthController {
         message: '로그인에 실패했습니다.',
       };
     }
-    console.log('로그인 성공');
     return {
       access_token: login.access_token,
       refresh_token: login.refresh_token,

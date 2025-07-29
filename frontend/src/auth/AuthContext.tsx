@@ -2,6 +2,7 @@ import React, {createContext, useState, useEffect, useContext} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import instance from './api';
 import {ActivityIndicator, View} from 'react-native';
+import {useFocusEffect} from '@react-navigation/native';
 
 interface UserProfile {
   name: string;
@@ -32,12 +33,16 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({
   const [logined, setLogined] = useState(false);
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [authChanged, setAuthChanged] = useState(false);
+
+  const triggerAuthCheck = () => setAuthChanged(p => !p);
 
   useEffect(() => {
     const checkAuth = async () => {
       setIsLoading(true);
       const accessToken = await AsyncStorage.getItem('access_token');
       const refreshToken = await AsyncStorage.getItem('refresh_token');
+
       if (accessToken && refreshToken) {
         try {
           const response = await instance.get<UserProfile>('auth/profile', {
@@ -49,36 +54,62 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({
           setUser(response.data);
           setLogined(true);
         } catch (error) {
-          await logout();
+          await AsyncStorage.multiRemove(['access_token', 'refresh_token']);
+          setUser(null);
+          setLogined(false);
         }
+      } else {
+        setUser(null);
+        setLogined(false);
       }
       setIsLoading(false);
     };
 
     checkAuth();
+  }, [authChanged]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      console.log('토큰 인증');
+      triggerAuthCheck();
+    }, 5 * 60 * 1000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      const res = await instance.post<{
-        accessToken: string;
-        refreshToken: string;
-      }>('auth/login', {email, password});
-      console.log(res.data);
-      const {accessToken, refreshToken} = res.data;
-      await AsyncStorage.setItem('access_token', accessToken);
-      await AsyncStorage.setItem('refresh_token', refreshToken);
+      const res = await instance.post('auth/login', {email, password});
+
+      const accessToken = res.data?.accessToken || res.data?.access_token;
+      const refreshToken = res.data?.refreshToken || res.data?.refresh_token;
+
+      if (typeof accessToken === 'string' && typeof refreshToken === 'string') {
+        await AsyncStorage.setItem('access_token', accessToken);
+        await AsyncStorage.setItem('refresh_token', refreshToken);
+        triggerAuthCheck();
+      } else {
+        console.error('Login error: Server response missing tokens.', res.data);
+        await AsyncStorage.multiRemove(['access_token', 'refresh_token']);
+        setUser(null);
+        setLogined(false);
+        setIsLoading(false);
+        throw new Error('Login failed: Invalid response from server.');
+      }
     } catch (error) {
-      await logout();
+      console.error('Login failed:', error);
+      await AsyncStorage.multiRemove(['access_token', 'refresh_token']);
+      setUser(null);
+      setLogined(false);
+      setIsLoading(false);
+      throw error;
     }
-    setIsLoading(false);
   };
 
   const logout = async () => {
-    setUser(null);
-    await AsyncStorage.removeItem('access_token');
-    await AsyncStorage.removeItem('refresh_token');
+    await AsyncStorage.multiRemove(['access_token', 'refresh_token']);
+    triggerAuthCheck();
   };
 
   const value = {
@@ -87,6 +118,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({
     logined,
     login,
     logout,
+    triggerAuthCheck,
   };
 
   if (isLoading) {

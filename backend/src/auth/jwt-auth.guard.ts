@@ -19,12 +19,10 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     super();
   }
 
-  async canActivate(context: ExecutionContext): Promise<boolean> {
+  async canActivate(context: ExecutionContext): Promise<any> {
     const request = context.switchToHttp().getRequest();
     const access_token = request.headers.authorization?.split(' ')[1];
     const refresh_token = request.headers['refresh-token'];
-
-    console.log('access_token:', access_token);
 
     if (!access_token || !refresh_token) {
       throw new UnauthorizedException({
@@ -51,6 +49,10 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
         request.headers.authorization = `Bearer ${new_token.access_token}`;
         request['refresh-token'] = new_token.refresh_token;
         request['user'] = new_token.user;
+        return {
+          access_token: new_token.access_token,
+          refresh_token: refresh_token,
+        };
       } else {
         throw new ForbiddenException({
           message:
