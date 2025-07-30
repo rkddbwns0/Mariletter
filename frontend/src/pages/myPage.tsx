@@ -3,7 +3,7 @@ import CustomFont from '../../components/customFont';
 import {useAuth} from '../auth/AuthContext';
 
 const MyPage = () => {
-  const {user} = useAuth();
+  const {user, logout} = useAuth();
 
   return (
     <View style={styles.myPageContainer}>
@@ -34,7 +34,11 @@ const MyPage = () => {
         />
       </View>
       <View>
-        <View></View>
+        <View>
+          <Pressable onPress={logout}>
+            <CustomFont children="로그아웃" size="medium" />
+          </Pressable>
+        </View>
         <View></View>
       </View>
     </View>

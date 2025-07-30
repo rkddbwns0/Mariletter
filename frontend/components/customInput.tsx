@@ -6,6 +6,7 @@ interface Props {
   color?: string;
   width: number;
   value?: string;
+  length?: number;
   onChangeText: (text: string) => void;
   onPress?: () => void;
   secure?: boolean;
@@ -18,6 +19,7 @@ const CustomInput = (props: Props) => {
     color,
     width,
     value,
+    length,
     onChangeText,
     onPress,
     secure,
@@ -32,6 +34,7 @@ const CustomInput = (props: Props) => {
       secureTextEntry={secure}
       style={[styles.input, {width: width, color: color}, style]}
       scrollEnabled={false}
+      maxLength={length}
     />
   );
 };

@@ -29,7 +29,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
 const AuthStack = () => (
-  <Stack.Navigator>
+  <Stack.Navigator initialRouteName="IndexPage">
     <Stack.Screen
       name="IndexPage"
       component={IndexPage}
@@ -45,6 +45,7 @@ const AuthStack = () => (
 
 const MainTabs = () => (
   <Tab.Navigator
+    initialRouteName="홈"
     screenOptions={{
       headerShown: false,
       tabBarActiveTintColor: '#rgba(255, 143, 204, 1)',

@@ -108,6 +108,7 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({
   };
 
   const logout = async () => {
+    await instance.post('auth/logout');
     await AsyncStorage.multiRemove(['access_token', 'refresh_token']);
     triggerAuthCheck();
   };

@@ -28,6 +28,7 @@ export class AuthController {
     };
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('logout')
   async logout(@Request() req) {
     const logout = await this.authService.logout(req.user.user_id);

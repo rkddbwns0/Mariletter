@@ -1,6 +1,4 @@
 import {
-  BadRequestException,
-  ForbiddenException,
   HttpException,
   HttpStatus,
   Injectable,
@@ -11,9 +9,6 @@ import { CreateUser } from 'src/dto/users.dto';
 import { UsersEntity } from 'src/entites/users.entites';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { JwtService } from '@nestjs/jwt';
-import { TokenEntity } from 'src/entites/token.entits';
-
 @Injectable()
 export class UserService {
   constructor(
@@ -26,7 +21,6 @@ export class UserService {
       const user = await this.users.findOne({
         where: { email: createUser.email },
       });
-      console.log(user);
       if (user) {
         throw new HttpException(
           '이미 가입된 사용자입니다.',

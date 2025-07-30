@@ -24,7 +24,6 @@ export class UsersController {
   @Get()
   async dupEmail(@Query('email') email: string) {
     const result = await this.userService.dupEmail(email);
-    console.log(result);
     return result;
   }
 }

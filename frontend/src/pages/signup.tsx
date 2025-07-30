@@ -13,7 +13,6 @@ import CustomFont from '../../components/customFont';
 import CustomInput from '../../components/customInput';
 import RadioButton from '../../components/radioButton';
 import axios from 'axios';
-import {useAuth} from '../auth/AuthContext';
 
 const SignupPage = ({navigation}: {navigation: any}) => {
   const [email, setEmail] = React.useState('');
@@ -41,8 +40,6 @@ const SignupPage = ({navigation}: {navigation: any}) => {
     passwordCheck: false,
     birth: false,
   });
-
-  const {login} = useAuth();
 
   const handleDupEmail = async () => {
     if (email === '') {
@@ -73,6 +70,50 @@ const SignupPage = ({navigation}: {navigation: any}) => {
     }
   };
 
+  const validatePassword = (value: string) => {
+    setPassword(value);
+    if (value === '') {
+      setErrorMsg(prev => ({...prev, password: ''}));
+      setCheckList(prev => ({...prev, password: false}));
+      return;
+    }
+
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,16}$/;
+    if (passwordRegex.test(value)) {
+      setErrorMsg(prev => ({...prev, password: '사용 가능한 비밀번호입니다.'}));
+      setCheckList(prev => ({...prev, password: true}));
+    } else {
+      setErrorMsg(prev => ({
+        ...prev,
+        password: '영문과 숫자를 포함하여 8~20자로 입력해 주세요.',
+      }));
+      setCheckList(prev => ({...prev, password: false}));
+    }
+
+    if (passwordCheck !== '') {
+      validatePasswordCheck(passwordCheck, value);
+    }
+  };
+
+  const validatePasswordCheck = (value: string, passwordValue?: string) => {
+    const comparedPassword = passwordValue ?? password;
+    setPasswordCheck(value);
+
+    if (value === '') {
+      setErrorMsg(prev => ({...prev, passwordCheck: ''}));
+      setCheckList(prev => ({...prev, passwordCheck: false}));
+      return;
+    } else if (value === comparedPassword) {
+      setErrorMsg(prev => ({...prev, passwordCheck: '비밀번호가 일치합니다.'}));
+      setCheckList(prev => ({...prev, passwordCheck: true}));
+    } else {
+      setErrorMsg(prev => ({
+        ...prev,
+        passwordCheck: '비밀번호가 일치하지 않습니다.',
+      }));
+      setCheckList(prev => ({...prev, passwordCheck: false}));
+    }
+  };
   const formatBrithDate = (input: string) => {
     const filtering = input.replace(/\D/g, '');
 
@@ -89,49 +130,38 @@ const SignupPage = ({navigation}: {navigation: any}) => {
   };
 
   const handleSignup = async () => {
-    if (
-      email === '' ||
-      password === '' ||
-      name === '' ||
-      phone === '' ||
-      birth === '' ||
-      gender === ''
-    ) {
-      Alert.alert('회원 정보를 모두 입력하세요.');
-      return;
-    }
-    try {
-      const res = await axios.post('http://1.2.3.4:3000/users', {
-        email: email,
-        password: password,
-        name: name,
-        phone: phone,
-        birth_day: birth,
-        sex: gender,
-      });
-      Alert.alert('회원가입 완료', '회원가입을 완료했습니다.', [
-        {
-          text: '확인',
-          onPress: () => {
-            login(email, password);
+    if (Object.values(checkList).every(value => value === true)) {
+      try {
+        const res = await axios.post('http://1.2.3.4:3000/users', {
+          email: email,
+          password: password,
+          name: name,
+          phone: phone,
+          birth_day: birth,
+          sex: gender,
+        });
+        Alert.alert('회원가입 완료', '회원가입을 완료했습니다.', [
+          {
+            text: '확인',
+            onPress: () => {
+              navigation.navigate('IndexPage');
+            },
           },
-        },
-      ]);
-    } catch (e) {
-      if (axios.isAxiosError(e)) {
-        const message =
-          e.response?.data.message ||
-          '알 수 없는 에러가 발생했습니다. 다시 시도해 주세요.';
-        Alert.alert('회원가입 실패', message);
-      } else {
-        Alert.alert('회원가입 실패', '알 수 없는 에러가 발생했습니다.');
+        ]);
+      } catch (e) {
+        if (axios.isAxiosError(e)) {
+          const message =
+            e.response?.data.message ||
+            '알 수 없는 에러가 발생했습니다. 다시 시도해 주세요.';
+          Alert.alert('회원가입 실패', message);
+        } else {
+          Alert.alert('회원가입 실패', '알 수 없는 에러가 발생했습니다.');
+        }
       }
+    } else {
+      Alert.alert('회원 정보를 모두 입력해 주세요.');
     }
   };
-
-  useEffect(() => {
-    console.log(errorMsg);
-  }, []);
 
   return (
     <KeyboardAvoidingView
@@ -185,17 +215,35 @@ const SignupPage = ({navigation}: {navigation: any}) => {
               placeholder="비밀번호"
               secure
               value={password}
-              onChangeText={setPassword}
+              onChangeText={text => validatePassword(text)}
               style={{marginTop: 10}}
+              length={20}
             />
+            {errorMsg.password !== '' && (
+              <CustomFont
+                children={errorMsg.password}
+                size="small"
+                style={{marginTop: 5}}
+                color={checkList.password === true ? 'green' : 'red'}
+              />
+            )}
             <CustomInput
               width={330}
               placeholder="비밀번호 확인"
               secure
               value={passwordCheck}
-              onChangeText={setPasswordCheck}
+              onChangeText={text => validatePasswordCheck(text)}
               style={{marginTop: 10}}
+              length={20}
             />
+            {errorMsg.passwordCheck !== '' && (
+              <CustomFont
+                children={errorMsg.passwordCheck}
+                size="small"
+                style={{marginTop: 5}}
+                color={checkList.passwordCheck === true ? 'green' : 'red'}
+              />
+            )}
           </View>
           <View style={styles.inputView}>
             <CustomFont children="이름" size="medium" weight="bold" />
