@@ -1,11 +1,11 @@
 import {
+  BadRequestException,
   HttpException,
   HttpStatus,
   Injectable,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { CreateUser } from 'src/dto/users.dto';
+import { CreateUserDto, FindUserDto } from 'src/dto/users.dto';
 import { UsersEntity } from 'src/entites/users.entites';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
@@ -16,7 +16,7 @@ export class UserService {
     private readonly users: Repository<UsersEntity>,
   ) {}
 
-  async createUsers(createUser: CreateUser): Promise<any> {
+  async createUsers(createUser: CreateUserDto): Promise<any> {
     try {
       const user = await this.users.findOne({
         where: { email: createUser.email },
@@ -36,6 +36,7 @@ export class UserService {
       return { message: '회원가입이 완료되었습니다.', user: newUser };
     } catch (e) {
       if (e instanceof HttpException) {
+        console.error(e);
         throw e;
       }
     }
@@ -52,23 +53,65 @@ export class UserService {
   }
 
   async dupEmail(email: string) {
-    const regexp = new RegExp(
-      '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
-    );
-
-    if (!regexp.test(email)) {
-      throw new HttpException(
-        '이메일 형식에 맞지 않습니다.',
-        HttpStatus.CONFLICT,
+    try {
+      const regexp = new RegExp(
+        '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
       );
-    }
 
-    const user = await this.users.findOne({ where: { email } });
-    console.log(user);
-    if (user) {
-      throw new HttpException('이미 가입된 이메일입니다.', HttpStatus.CONFLICT);
-    }
+      if (!regexp.test(email)) {
+        throw new HttpException(
+          '이메일 형식에 맞지 않습니다.',
+          HttpStatus.CONFLICT,
+        );
+      }
 
-    return { avalidate: true };
+      const user = await this.users.findOne({ where: { email } });
+      console.log(user);
+      if (user) {
+        throw new HttpException(
+          '이미 가입된 이메일입니다.',
+          HttpStatus.CONFLICT,
+        );
+      }
+
+      return { avalidate: true };
+    } catch (e) {
+      if (e instanceof HttpException) {
+        console.error(e);
+        throw e;
+      }
+    }
+  }
+
+  async findUser(findUser: FindUserDto) {
+    try {
+      const findEmail = await this.users.findOne({
+        where: { name: findUser.name, phone: findUser.phone },
+        select: ['email'],
+      });
+
+      const findPassword = await this.users.findOne({
+        where: {
+          name: findUser.name,
+          phone: findUser.phone,
+          email: findUser.email,
+        },
+      });
+
+      const result = findUser.email ? findPassword : findEmail;
+      if (!result) {
+        throw new HttpException(
+          '가입된 회원이 아닙니다.',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      return result;
+    } catch (e) {
+      if (e instanceof HttpException) {
+        console.error(e);
+        throw e;
+      }
+    }
   }
 }

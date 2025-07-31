@@ -7,7 +7,7 @@ import {
   MaxLength,
 } from 'class-validator';
 
-export class CreateUser {
+export class CreateUserDto {
   @IsNotEmpty()
   @IsEmail()
   @IsString()
@@ -16,7 +16,7 @@ export class CreateUser {
 
   @IsNotEmpty()
   @IsString()
-  @Matches(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/)
+  @Matches(/^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,20}$/)
   password: string;
 
   @IsNotEmpty()
@@ -35,4 +35,20 @@ export class CreateUser {
   @IsNotEmpty()
   @IsString()
   sex: string;
+}
+
+export class FindUserDto {
+  @IsNotEmpty()
+  @IsString()
+  name: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @MaxLength(11)
+  phone: string;
+
+  @IsNotEmpty()
+  @IsString()
+  @MaxLength(25)
+  email?: string;
 }
