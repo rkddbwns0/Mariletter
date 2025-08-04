@@ -1,9 +1,4 @@
-import {
-  BadRequestException,
-  HttpException,
-  HttpStatus,
-  Injectable,
-} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateUserDto, FindUserDto } from 'src/dto/users.dto';
 import { UsersEntity } from 'src/entites/users.entites';
@@ -96,6 +91,7 @@ export class UserService {
           phone: findUser.phone,
           email: findUser.email,
         },
+        select: ['user_id'],
       });
 
       const result = findUser.email ? findPassword : findEmail;
@@ -107,6 +103,34 @@ export class UserService {
       }
 
       return result;
+    } catch (e) {
+      if (e instanceof HttpException) {
+        console.error(e);
+        throw e;
+      }
+    }
+  }
+
+  async changePassword(user_id: number, password: string) {
+    try {
+      const user = await this.users.findOne({
+        where: { user_id: user_id },
+        select: ['password'],
+      });
+      if (!user) {
+        throw new HttpException('잘못된 사용자입니다.', HttpStatus.BAD_REQUEST);
+      }
+
+      if (bcrypt.compareSync(password, user.password)) {
+        throw new HttpException(
+          '이미 사용 중인 비밀번호입니다.',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      const hashPassword = this.hashPassword(password);
+      await this.users.update(user_id, { password: hashPassword });
+      return { message: '비밀번호가 변경되었습니다.' };
     } catch (e) {
       if (e instanceof HttpException) {
         console.error(e);

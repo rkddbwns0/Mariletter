@@ -10,7 +10,7 @@ import {
 @Check('sex = "m" or sex = "f"')
 export class UsersEntity {
   @PrimaryGeneratedColumn()
-  id: number;
+  user_id: number;
 
   @Column({ type: 'varchar', unique: true, nullable: false, length: 25 })
   email: string;

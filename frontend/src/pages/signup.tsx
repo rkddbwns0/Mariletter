@@ -1,4 +1,4 @@
-import React, {use, useEffect, useState} from 'react';
+import React, {use, useEffect, useRef, useState} from 'react';
 import {
   Alert,
   Image,
@@ -7,6 +7,7 @@ import {
   Pressable,
   ScrollView,
   StyleSheet,
+  TextInput,
   View,
 } from 'react-native';
 import CustomFont from '../../components/customFont';
@@ -127,6 +128,11 @@ const SignupPage = ({navigation}: {navigation: any}) => {
     }
 
     return sliced;
+  };
+
+  const handleKeyPress = (event: any) => {
+    if (event.key === 'Enter') {
+    }
   };
 
   const handleSignup = async () => {
@@ -264,6 +270,7 @@ const SignupPage = ({navigation}: {navigation: any}) => {
                 value={phone}
                 onChangeText={setPhone}
                 style={{marginTop: 10}}
+                length={11}
               />
               <Pressable style={styles.chkBtn}>
                 <CustomFont
